@@ -45,7 +45,7 @@ private:
 	bool IsAmbiDirectional = false;
 
 	UPROPERTY(EditAnywhere, Category = "ActivateMovement")
-	bool IsActive = true;
+	bool CanMove = true;
 
 	void MovePlatform(float DeltaTime);
 
@@ -71,9 +71,16 @@ private:
 	void RotatePlatform(float DeltaTime);
 
 	UPROPERTY(EditAnywhere, Category = "Rotation")
-	bool SmoothRotStart;
+	double RotStartMulti = 0.1;
+
 	UPROPERTY(EditAnywhere, Category = "Rotation")
-	bool SmoothRotEnd;
+	double RotMidMulti = 2.0;
+
+	UPROPERTY(EditAnywhere, Category = "Rotation")
+	double RotEndMulti = 0.1;
+
+	UPROPERTY(EditAnywhere, Category = "Rotation")
+	bool UseMaxAngle = false;
 
 
 };

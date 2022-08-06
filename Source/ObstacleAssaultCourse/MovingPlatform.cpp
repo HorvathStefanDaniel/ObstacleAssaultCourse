@@ -24,9 +24,11 @@ void AMovingPlatform::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(IsActive){
+	if(CanMove){
 		MovePlatform(DeltaTime);
+	}
 
+	if(CanRotate){
 		RotatePlatform(DeltaTime);
 	}
 }
@@ -61,14 +63,17 @@ void AMovingPlatform::MovePlatform(float DeltaTime){
 void AMovingPlatform::RotatePlatform(float DeltaTime){
 	FRotator CurrentRotation = GetActorRotation();
 
-	float PitchAmplifA = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Pitch, StartRotation.Pitch + MaxAngle.Pitch / 2), FVector2D(0.1, 2.0), CurrentRotation.Pitch);
-	float PitchAmplifB = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Pitch + MaxAngle.Pitch / 2, StartRotation.Pitch + MaxAngle.Pitch), FVector2D(2, 0.1), CurrentRotation.Pitch);
+	FVector2D rotStartMultiVector = FVector2D(RotStartMulti, RotMidMulti);
+	FVector2D rotEndMultiVector = FVector2D(RotMidMulti, RotEndMulti);
 
-	float YawAmplifA = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Yaw, StartRotation.Yaw + MaxAngle.Yaw / 2), FVector2D(0.1, 2.0), CurrentRotation.Yaw);
-	float YawAmplifB = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Yaw + MaxAngle.Yaw / 2, StartRotation.Yaw + MaxAngle.Yaw), FVector2D(2, 0.1), CurrentRotation.Yaw);
+	float PitchAmplifA = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Pitch, StartRotation.Pitch + MaxAngle.Pitch / 2), rotStartMultiVector, CurrentRotation.Pitch);
+	float PitchAmplifB = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Pitch + MaxAngle.Pitch / 2, StartRotation.Pitch + MaxAngle.Pitch), rotEndMultiVector, CurrentRotation.Pitch);
 
-	float RollAmplifA = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Roll, StartRotation.Roll + MaxAngle.Roll / 2), FVector2D(0.1, 2.0), CurrentRotation.Roll);
-	float RollAmplifB = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Roll + MaxAngle.Roll / 2, StartRotation.Roll + MaxAngle.Roll), FVector2D(2, 0.1), CurrentRotation.Roll);
+	float YawAmplifA = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Yaw, StartRotation.Yaw + MaxAngle.Yaw / 2), rotStartMultiVector, CurrentRotation.Yaw);
+	float YawAmplifB = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Yaw + MaxAngle.Yaw / 2, StartRotation.Yaw + MaxAngle.Yaw), rotEndMultiVector, CurrentRotation.Yaw);
+
+	float RollAmplifA = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Roll, StartRotation.Roll + MaxAngle.Roll / 2), rotStartMultiVector, CurrentRotation.Roll);
+	float RollAmplifB = FMath::GetMappedRangeValueClamped(FVector2D(StartRotation.Roll + MaxAngle.Roll / 2, StartRotation.Roll + MaxAngle.Roll), rotEndMultiVector, CurrentRotation.Roll);
 
 	FRotator TempSpeed = RotationSpeed;
 
@@ -92,27 +97,29 @@ void AMovingPlatform::RotatePlatform(float DeltaTime){
 
 	FRotator NewRotation = CurrentRotation + (TempSpeed * DeltaTime * 10);
 
-	if(NewRotation.Pitch >= StartRotation.Pitch + MaxAngle.Pitch || NewRotation.Pitch <= StartRotation.Pitch){
-		NewRotation.Pitch = StartRotation.Pitch + MaxAngle.Pitch * (NewRotation.Pitch >= MaxAngle.Pitch);
+	if(UseMaxAngle){
+		if(NewRotation.Pitch >= StartRotation.Pitch + MaxAngle.Pitch || NewRotation.Pitch <= StartRotation.Pitch){
+			NewRotation.Pitch = StartRotation.Pitch + MaxAngle.Pitch * (NewRotation.Pitch >= MaxAngle.Pitch);
 
-		if(ReturnAfterDistanceTraveled && DistanceTraveled || !ReturnAfterDistanceTraveled){
-			RotationSpeed.Pitch = -1 * RotationSpeed.Pitch;
+			if(ReturnAfterDistanceTraveled && DistanceTraveled || !ReturnAfterDistanceTraveled){
+				RotationSpeed.Pitch = -1 * RotationSpeed.Pitch;
+			}
 		}
-	}
 
-	if(NewRotation.Yaw >= StartRotation.Yaw + MaxAngle.Yaw || NewRotation.Yaw <= StartRotation.Yaw){
-		NewRotation.Yaw = StartRotation.Yaw + MaxAngle.Yaw * (NewRotation.Yaw >= MaxAngle.Yaw);
+		if(NewRotation.Yaw >= StartRotation.Yaw + MaxAngle.Yaw || NewRotation.Yaw <= StartRotation.Yaw){
+			NewRotation.Yaw = StartRotation.Yaw + MaxAngle.Yaw * (NewRotation.Yaw >= MaxAngle.Yaw);
 
-		if(ReturnAfterDistanceTraveled && DistanceTraveled || !ReturnAfterDistanceTraveled){
-			RotationSpeed.Yaw = -1 * RotationSpeed.Yaw;
+			if(ReturnAfterDistanceTraveled && DistanceTraveled || !ReturnAfterDistanceTraveled){
+				RotationSpeed.Yaw = -1 * RotationSpeed.Yaw;
+			}
 		}
-	}
 
-	if(NewRotation.Roll >= StartRotation.Roll + MaxAngle.Roll || NewRotation.Roll <= StartRotation.Roll){
-		NewRotation.Roll = StartRotation.Roll + MaxAngle.Roll * (NewRotation.Roll >= MaxAngle.Roll);
+		if(NewRotation.Roll >= StartRotation.Roll + MaxAngle.Roll || NewRotation.Roll <= StartRotation.Roll){
+			NewRotation.Roll = StartRotation.Roll + MaxAngle.Roll * (NewRotation.Roll >= MaxAngle.Roll);
 
-		if(ReturnAfterDistanceTraveled && DistanceTraveled || !ReturnAfterDistanceTraveled){
-			RotationSpeed.Roll = -1 * RotationSpeed.Roll;
+			if(ReturnAfterDistanceTraveled && DistanceTraveled || !ReturnAfterDistanceTraveled){
+				RotationSpeed.Roll = -1 * RotationSpeed.Roll;
+			}
 		}
 	}
 
